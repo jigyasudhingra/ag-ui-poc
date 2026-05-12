@@ -34,7 +34,7 @@ const SNIPPETS: Record<string, string> = {
   streaming:
     "Try: “What is the AG-UI protocol and why does it matter for agentic frontends?”",
   genui:
-    'Try: “Format this as a table: [{\\"name\\":\\"Alice\\",\\"score\\":95}]” or “What is 2^32?”',
+    'Try tables/math, or HITL: draft email to team@example.com, ask for a missing date, or delete /tmp/demo.log (simulate).',
   hitl: "Try: “Generate 5 UUIDs and save them.” Approve or cancel in-chat.",
   "frontend-tools":
     "Try: “Take me to the shared state demo.” or “Highlight the navigation sidebar.”",
@@ -89,16 +89,20 @@ export function DemoProviders({ children }: { children: ReactNode }) {
             </p>
           </header>
           <div className="flex min-h-0 flex-1">
-            <main className="min-h-0 flex-1 space-y-4 overflow-auto px-6 py-4">
-              {children}
-            </main>
             {!legacyChat ? (
-              <aside className="flex w-[min(420px,40vw)] shrink-0 flex-col border-l border-[var(--surface-border)] bg-[var(--background)]">
-                <AgUiRuntimeProvider>
+              <AgUiRuntimeProvider>
+                <main className="min-h-0 flex-1 space-y-4 overflow-auto px-6 py-4">
+                  {children}
+                </main>
+                <aside className="flex w-[min(420px,40vw)] shrink-0 flex-col border-l border-[var(--surface-border)] bg-[var(--background)]">
                   <PremiumThread />
-                </AgUiRuntimeProvider>
-              </aside>
-            ) : null}
+                </aside>
+              </AgUiRuntimeProvider>
+            ) : (
+              <main className="min-h-0 flex-1 space-y-4 overflow-auto px-6 py-4">
+                {children}
+              </main>
+            )}
           </div>
           {multi ? (
             <div className="space-y-2 border-t border-zinc-800 px-6 py-3">

@@ -1,6 +1,9 @@
 "use client";
 
+import { MessagePartComponent } from "@assistant-ui/core/react";
+import type { PartState } from "@assistant-ui/core/react";
 import {
+  ActionBarPrimitive,
   BranchPickerPrimitive,
   ComposerPrimitive,
   MessagePartPrimitive,
@@ -9,34 +12,40 @@ import {
 } from "@assistant-ui/react";
 
 import { AssistantMarkdownText } from "@/components/premium/AssistantMarkdownText";
+import { FollowUpSuggestions } from "@/components/premium/FollowUpSuggestions";
 import { premiumToolComponents } from "@/components/premium/PremiumToolParts";
+import { ThinkingBlockShell } from "@/components/premium/ThinkingBlock";
 import { WelcomeScreen } from "@/components/premium/WelcomeScreen";
 
-const ReasoningCollapsed = ({ text }: { text: string }) => (
-  <details className="group mb-2">
-    <summary className="flex cursor-pointer items-center gap-1 text-xs text-zinc-600 hover:text-zinc-400">
-      <span className="transition-transform group-open:rotate-90">›</span>
-      Thinking…
-    </summary>
-    <div className="mt-2 border-l border-white/[0.06] pl-3 text-xs leading-relaxed text-zinc-500 italic">
-      {text}
-    </div>
-  </details>
-);
+const chainGroupBy = (part: PartState) =>
+  part.type === "reasoning" || part.type === "tool-call"
+    ? (["group-thought"] as const)
+    : null;
 
 function UserMessage() {
   return (
-    <MessagePrimitive.Root className="flex justify-end gap-3">
-      <div className="max-w-[75%] rounded-2xl rounded-tr-sm border border-[var(--accent-border)] bg-[var(--user-bubble)] px-4 py-3 text-sm leading-relaxed text-[var(--text-primary)]">
-        <MessagePrimitive.Parts
-          components={{
-            Text: () => (
-              <p className="whitespace-pre-wrap">
-                <MessagePartPrimitive.Text />
-              </p>
-            ),
-          }}
-        />
+    <MessagePrimitive.Root className="group flex justify-end gap-3">
+      <div className="max-w-[75%] space-y-1">
+        <div className="rounded-2xl rounded-tr-sm border border-[var(--accent-border)] bg-[var(--user-bubble)] px-4 py-3 text-sm leading-relaxed text-[var(--text-primary)]">
+          <MessagePrimitive.Parts
+            components={{
+              Text: () => (
+                <p className="whitespace-pre-wrap">
+                  <MessagePartPrimitive.Text />
+                </p>
+              ),
+            }}
+          />
+        </div>
+        <ActionBarPrimitive.Root
+          hideWhenRunning
+          autohide="not-last"
+          className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          <ActionBarPrimitive.Edit className="rounded px-2 py-1 text-[11px] text-zinc-600 hover:bg-zinc-800 hover:text-zinc-300">
+            Edit
+          </ActionBarPrimitive.Edit>
+        </ActionBarPrimitive.Root>
       </div>
     </MessagePrimitive.Root>
   );
@@ -49,20 +58,60 @@ function AssistantMessage() {
         ✦
       </div>
       <div className="min-w-0 flex-1 space-y-3">
-        <MessagePrimitive.Parts
-          components={{
-            Text: () => <AssistantMarkdownText />,
-            Reasoning: ReasoningCollapsed,
-            tools: premiumToolComponents,
+        <MessagePrimitive.GroupedParts groupBy={chainGroupBy}>
+          {({ part, children }) => {
+            switch (part.type) {
+              case "group-thought":
+                return <ThinkingBlockShell>{children}</ThinkingBlockShell>;
+              case "text":
+                return <AssistantMarkdownText />;
+              case "reasoning":
+                return (
+                  <div className="my-1 border-l-2 border-zinc-800 pl-3 text-xs italic leading-relaxed text-zinc-600">
+                    {part.text}
+                  </div>
+                );
+              case "tool-call":
+                return (
+                  <MessagePartComponent
+                    components={{ tools: premiumToolComponents }}
+                  />
+                );
+              default:
+                return null;
+            }
           }}
-        />
-        <BranchPickerPrimitive.Root className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-          <BranchPickerPrimitive.Previous className="rounded px-2 py-1 text-xs text-zinc-600 hover:text-zinc-400" />
-          <span className="px-2 py-1 text-xs text-zinc-600">
+        </MessagePrimitive.GroupedParts>
+        <ActionBarPrimitive.Root
+          hideWhenRunning
+          autohide="not-last"
+          className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          <ActionBarPrimitive.Edit className="rounded px-2 py-1 text-[11px] text-zinc-600 hover:bg-zinc-800 hover:text-zinc-300">
+            Edit
+          </ActionBarPrimitive.Edit>
+          <ActionBarPrimitive.Reload className="rounded px-2 py-1 text-[11px] text-zinc-600 hover:bg-zinc-800 hover:text-zinc-300">
+            Retry
+          </ActionBarPrimitive.Reload>
+          <ActionBarPrimitive.Copy className="rounded px-2 py-1 text-[11px] text-zinc-600 hover:bg-zinc-800 hover:text-zinc-300">
+            Copy
+          </ActionBarPrimitive.Copy>
+        </ActionBarPrimitive.Root>
+        <BranchPickerPrimitive.Root
+          hideWhenSingleBranch
+          className="flex items-center gap-1 text-xs text-zinc-600"
+        >
+          <BranchPickerPrimitive.Previous className="rounded border border-transparent px-2 py-1 hover:border-white/[0.08] hover:bg-zinc-800 hover:text-zinc-300">
+            ‹
+          </BranchPickerPrimitive.Previous>
+          <span className="min-w-[2.5rem] text-center font-mono text-[11px]">
             <BranchPickerPrimitive.Count />
           </span>
-          <BranchPickerPrimitive.Next className="rounded px-2 py-1 text-xs text-zinc-600 hover:text-zinc-400" />
+          <BranchPickerPrimitive.Next className="rounded border border-transparent px-2 py-1 hover:border-white/[0.08] hover:bg-zinc-800 hover:text-zinc-300">
+            ›
+          </BranchPickerPrimitive.Next>
         </BranchPickerPrimitive.Root>
+        <FollowUpSuggestions />
       </div>
     </MessagePrimitive.Root>
   );

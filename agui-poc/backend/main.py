@@ -24,6 +24,7 @@ from agents import (
     streaming,
 )
 from state_models import DashboardState
+from routes.suggestions import router as suggestions_router
 
 load_dotenv()
 
@@ -70,6 +71,8 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+app.include_router(suggestions_router)
 
 
 async def _dispatch(agent_key: str, request: Request, *, deps=None):

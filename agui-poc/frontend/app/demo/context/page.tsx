@@ -1,6 +1,7 @@
 'use client';
 
 import { useCopilotReadable } from '@copilotkit/react-core';
+import { useAssistantInstructions } from '@assistant-ui/react';
 import { useMemo, useState } from 'react';
 
 export default function Page() {
@@ -15,6 +16,14 @@ export default function Page() {
         stage: i % 2 === 0 ? 'Qualified' : 'Negotiation',
       })),
     [],
+  );
+
+  useAssistantInstructions(
+    useMemo(
+      () =>
+        `User's current dashboard context (mock CRM): activeFilter=${filter}, visibleMetric=${metric}, userRole=admin, rowCount=${rows.length}, previewRows=${JSON.stringify(rows.slice(0, 3))}. Reference this when summarizing what is on screen.`,
+      [filter, metric, rows],
+    ),
   );
 
   useCopilotReadable({

@@ -4,22 +4,27 @@ from __future__ import annotations
 
 from pydantic_ai import Agent, Tool
 
+import ag_ui_hitl_tools
 import tools as demo_tools
 
 
 def build(model: str, *, tavily_key: str | None) -> Agent:
     tl = demo_tools.build_tavily_tool(tavily_key)
     base_tools = [
+        Tool(ag_ui_hitl_tools.present_plan),
         Tool(demo_tools.calculator),
         Tool(demo_tools.data_formatter),
     ]
     if tl is not None:
-        base_tools.insert(0, tl)
+        base_tools.insert(1, tl)
     return Agent(
         model,
         tools=base_tools,
         instructions=(
             'For portfolio or price breakdown requests: '
+            'If the answer requires three or more distinct tool steps, call present_plan first with '
+            'short step labels and a one-line action_summary; wait for user approval, then only '
+            'execute the approved steps. '
             '1) Use tavily_search to find a recent price when needed. '
             '2) Use calculator with explicit expressions for any arithmetic (e.g. price * quantity). '
             '3) Use data_formatter to show a clean markdown-ready table summary of inputs and results. '

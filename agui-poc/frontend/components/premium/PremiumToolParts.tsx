@@ -74,7 +74,14 @@ export function DataFormatterTool(props: ToolCallMessagePartProps) {
   );
   return (
     <div className="space-y-2">
-      {!busy ? <ToolStatusPill toolName="data_formatter" running={false} /> : null}
+      <div className="flex flex-wrap items-center gap-2">
+        <ToolStatusPill toolName="data_formatter" running={busy} />
+        {busy ? (
+          <span className="animate-pulse text-[10px] font-medium uppercase tracking-wide text-amber-400/70">
+            Live rows
+          </span>
+        ) : null}
+      </div>
       <DataTable
         headers={parsed.headers}
         rows={rows}

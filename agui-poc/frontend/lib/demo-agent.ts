@@ -31,7 +31,7 @@ export function demoSegmentFromPath(pathname: string): string {
   return pathname.replace(/^\/demo\/?/, '').split('/')[0] || 'streaming';
 }
 
-/** Demos that still rely on CopilotKit hooks (HITL, actions, shared state). */
+/** Demos that still rely on CopilotKit hooks (HITL, actions, shared state). UC3 HITL UI is legacy Copilot sidebar; premium HITL tool UIs are exercised on Generative UI and Multi-step demos. */
 export const LEGACY_COPILOT_SIDEBAR_SEGMENTS = new Set([
   'hitl',
   'frontend-tools',
