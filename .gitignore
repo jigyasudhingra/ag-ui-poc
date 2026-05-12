@@ -8,3 +8,8 @@ __pycache__/
 *.py[cod]
 .next/
 dist/
+
+agui-poc/backend/.env
+agui-poc/backend/__pycache__/
+agui-poc/frontend/.env
+agui-poc/frontend/node_modules/
