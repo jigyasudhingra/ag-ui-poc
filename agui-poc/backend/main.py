@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -13,7 +14,15 @@ from starlette.requests import Request
 from pydantic_ai.ui import StateDeps
 from pydantic_ai.ui.ag_ui import AGUIAdapter
 
-from agents import context_agent, genui, hitl, multi_step, shared_state, streaming
+from agents import (
+    context_agent,
+    genui,
+    hitl,
+    mcp_demo,
+    multi_step,
+    shared_state,
+    streaming,
+)
 from state_models import DashboardState
 
 load_dotenv()
@@ -21,23 +30,13 @@ load_dotenv()
 MODEL = os.getenv('OPENAI_MODEL', 'openai:gpt-4o')
 TAVILY_KEY = os.getenv('TAVILY_API_KEY')
 
-app = FastAPI(title='AG-UI POC Backend')
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=['*'],
-    allow_credentials=False,
-    allow_methods=['*'],
-    allow_headers=['*'],
-)
-
 _agents: dict[str, object] | None = None
 
 
-@app.on_event('startup')
-async def _startup() -> None:
+def _load_agents() -> None:
     global _agents
     if not os.getenv('OPENAI_API_KEY'):
+        _agents = None
         return
     _agents = {
         'streaming': streaming.build(MODEL, tavily_key=TAVILY_KEY),
@@ -47,7 +46,30 @@ async def _startup() -> None:
         'shared_state': shared_state.build(MODEL),
         'context': context_agent.build(MODEL, tavily_key=TAVILY_KEY),
         'multi_step': multi_step.build(MODEL, tavily_key=TAVILY_KEY),
+        'mcp_demo': mcp_demo.build(MODEL),
     }
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    _load_agents()
+    mcp_agent = _agents.get('mcp_demo') if _agents else None
+    if mcp_agent is not None:
+        async with mcp_agent:
+            yield
+    else:
+        yield
+
+
+app = FastAPI(title='AG-UI POC Backend', lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=False,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
 
 async def _dispatch(agent_key: str, request: Request, *, deps=None):
@@ -101,3 +123,8 @@ async def context_route(request: Request):
 @app.post('/api/multi-step')
 async def multi_step_route(request: Request):
     return await _dispatch('multi_step', request)
+
+
+@app.post('/api/mcp-demo')
+async def mcp_demo_route(request: Request):
+    return await _dispatch('mcp_demo', request)

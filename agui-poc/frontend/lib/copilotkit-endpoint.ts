@@ -14,6 +14,7 @@ const runtime = new CopilotRuntime({
     shared_state: new HttpAgent({ url: `${backend}/api/shared-state` }),
     context: new HttpAgent({ url: `${backend}/api/context` }),
     multi_step: new HttpAgent({ url: `${backend}/api/multi-step` }),
+    mcp_demo: new HttpAgent({ url: `${backend}/api/mcp-demo` }),
   },
 });
 

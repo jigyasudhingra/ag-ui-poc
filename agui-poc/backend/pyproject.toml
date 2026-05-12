@@ -5,7 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.136.1",
-    "pydantic-ai-slim[ag-ui,openai,tavily]>=1.93.0",
+    "pydantic-ai-slim[ag-ui,mcp,openai,tavily]>=1.93.0",
     "python-dotenv>=1.2.2",
     "uvicorn>=0.46.0",
 ]

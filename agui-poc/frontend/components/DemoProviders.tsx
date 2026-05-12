@@ -6,9 +6,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { agentIdFromPath, demoTitles } from "@/lib/demo-agent";
+import { AgUiRuntimeProvider } from "@/components/AgUiRuntimeProvider";
+import { PremiumThread } from "@/components/premium/PremiumThread";
+import {
+  agentIdFromPath,
+  demoSegmentFromPath,
+  demoTitles,
+  usesLegacyCopilotSidebar,
+} from "@/lib/demo-agent";
 
-import { EventInspector } from "@/components/EventInspector";
 import { HitlTools } from "@/components/HitlTools";
 import { ThinkingPanel } from "@/components/ThinkingPanel";
 import { ToolCallRenderer } from "@/components/ToolCallRenderer";
@@ -21,6 +27,7 @@ const NAV = [
   { href: "/demo/shared-state", label: "UC5 Shared state" },
   { href: "/demo/context", label: "UC6 Context" },
   { href: "/demo/multi-step", label: "UC7 Multi-step" },
+  { href: "/demo/mcp", label: "UC8 MCP" },
 ] as const;
 
 const SNIPPETS: Record<string, string> = {
@@ -36,21 +43,22 @@ const SNIPPETS: Record<string, string> = {
   context: "Try: “Summarize what you can see right now.”",
   "multi-step":
     "Try: “Search BTC price, calculate what 0.35 BTC is worth, show a breakdown table.”",
+  mcp: "Try: “What’s the BTC funding rate and price?” (MCP crypto tools + calculators)",
 };
 
 export function DemoProviders({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "/demo/streaming";
-  const segment =
-    pathname.replace(/^\/demo\/?/, "").split("/")[0] || "streaming";
+  const segment = demoSegmentFromPath(pathname);
   const agentId = agentIdFromPath(pathname);
   const multi = segment === "multi-step";
+  const legacyChat = usesLegacyCopilotSidebar(segment);
 
   return (
     <CopilotKit runtimeUrl="/api/copilotkit" agent={agentId}>
-      <ToolCallRenderer />
+      {legacyChat ? <ToolCallRenderer /> : null}
       {segment === "hitl" ? <HitlTools /> : null}
       <div className="flex min-h-full flex-1">
-        <nav className="agent-highlight-target w-56 shrink-0 border-r border-zinc-800 bg-zinc-950/80 p-3">
+        <nav className="agent-highlight-target w-56 shrink-0 border-r border-zinc-800/80 bg-[var(--surface)]/90 p-3">
           <div className="mb-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">
             AG-UI POC
           </div>
@@ -71,7 +79,7 @@ export function DemoProviders({ children }: { children: ReactNode }) {
             ))}
           </ul>
         </nav>
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <header className="border-b border-zinc-800 px-6 py-4">
             <h1 className="text-lg font-semibold text-zinc-100">
               {demoTitles(segment)}
@@ -80,23 +88,35 @@ export function DemoProviders({ children }: { children: ReactNode }) {
               {SNIPPETS[segment] ?? ""}
             </p>
           </header>
-          <main className="flex-1 space-y-4 px-6 py-4">{children}</main>
+          <div className="flex min-h-0 flex-1">
+            <main className="min-h-0 flex-1 space-y-4 overflow-auto px-6 py-4">
+              {children}
+            </main>
+            {!legacyChat ? (
+              <aside className="flex w-[min(420px,40vw)] shrink-0 flex-col border-l border-[var(--surface-border)] bg-[var(--background)]">
+                <AgUiRuntimeProvider>
+                  <PremiumThread />
+                </AgUiRuntimeProvider>
+              </aside>
+            ) : null}
+          </div>
           {multi ? (
-            <div className="border-t border-zinc-800 px-6 py-3 space-y-2">
+            <div className="space-y-2 border-t border-zinc-800 px-6 py-3">
               <ThinkingPanel />
             </div>
           ) : null}
         </div>
       </div>
-      <CopilotSidebar
-        defaultOpen
-        labels={{
-          title: "Copilot",
-          initial: SNIPPETS[segment] ?? "Ask anything…",
-          placeholder: "Message…",
-        }}
-      />
-      {/* {multi ? <EventInspector /> : null} */}
+      {legacyChat ? (
+        <CopilotSidebar
+          defaultOpen
+          labels={{
+            title: "Copilot",
+            initial: SNIPPETS[segment] ?? "Ask anything…",
+            placeholder: "Message…",
+          }}
+        />
+      ) : null}
     </CopilotKit>
   );
 }
