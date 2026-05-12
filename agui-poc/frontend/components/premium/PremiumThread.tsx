@@ -8,6 +8,7 @@ import {
   ThreadPrimitive,
 } from "@assistant-ui/react";
 
+import { AssistantMarkdownText } from "@/components/premium/AssistantMarkdownText";
 import { premiumToolComponents } from "@/components/premium/PremiumToolParts";
 import { WelcomeScreen } from "@/components/premium/WelcomeScreen";
 
@@ -50,16 +51,7 @@ function AssistantMessage() {
       <div className="min-w-0 flex-1 space-y-3">
         <MessagePrimitive.Parts
           components={{
-            Text: () => (
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-primary)]">
-                <MessagePartPrimitive.Text />
-                <MessagePartPrimitive.InProgress>
-                  <span className="font-[family-name:var(--font-geist-mono)]">
-                    {" \u25CF"}
-                  </span>
-                </MessagePartPrimitive.InProgress>
-              </p>
-            ),
+            Text: () => <AssistantMarkdownText />,
             Reasoning: ReasoningCollapsed,
             tools: premiumToolComponents,
           }}
@@ -117,7 +109,7 @@ export function PremiumThread() {
         </div>
       </div>
 
-      <ThreadPrimitive.Viewport className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 py-6">
+      <ThreadPrimitive.Viewport className="scrollbar-thin min-h-0 max-h-[calc(100vh-280px)] flex-1 overflow-y-auto px-4 py-6">
         <ThreadPrimitive.Empty>
           <WelcomeScreen />
         </ThreadPrimitive.Empty>
@@ -129,7 +121,7 @@ export function PremiumThread() {
         />
       </ThreadPrimitive.Viewport>
 
-      <ThreadPrimitive.ScrollToBottom className="absolute bottom-28 right-6 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-zinc-400 shadow-lg transition-all hover:text-white" />
+      <ThreadPrimitive.ScrollToBottom className="absolute bottom-40 right-6 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-zinc-400 shadow-lg transition-all hover:text-white" />
 
       <PremiumComposer />
     </ThreadPrimitive.Root>
